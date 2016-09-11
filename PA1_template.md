@@ -1,12 +1,8 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Loading required packages
-```{r message=FALSE}
+
+```r
 library(ggplot2)
 library(dplyr)
 library(lubridate)
@@ -15,8 +11,8 @@ library(cowplot)
 ```
 
 ## Loading and preprocessing the data
-```{r}
 
+```r
 data_source <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
 download.file(data_source, "activity.zip", method = "curl") 
@@ -27,7 +23,8 @@ activity_data <- read.csv("activity.csv") %>%
 ```
 
 ## What is mean total number of steps taken per day?
-```{r}
+
+```r
 total_steps_per_day <- activity_data %>% 
                        filter(!is.na(steps)) %>%
                        group_by(date) %>% 
@@ -38,11 +35,13 @@ plot1 <- ggplot(data = total_steps_per_day, aes(x = total_steps)) +
             geom_vline(aes(xintercept=mean(total_steps)), color = "green", size = 2) +
             geom_vline(aes(xintercept=median(total_steps)), color = "blue", size = 2, linetype = "dashed")
 plot1
-
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 ## What is the average daily activity pattern?
-```{r}
+
+```r
 interval_avg <- activity_data %>%
                 filter(!is.na(steps)) %>%
                 group_by(date, interval) %>%
@@ -56,11 +55,14 @@ plot2 <- ggplot(data = interval_avg, aes(interval, avg_steps)) +
 plot2
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 
 ## Imputing missing values
 
 #### Calculate and report the total number of missing values in the dataset 
-```{r kable}
+
+```r
 with_missing <- activity_data %>% 
                 filter(is.na(steps)) %>% 
                 group_by(date) 
@@ -69,14 +71,18 @@ plot3 <- ggplot(data = with_missing, aes(date)) + geom_bar(fill="blue")
 plot3
 ```
 
+![](PA1_template_files/figure-html/kable-1.png)<!-- -->
+
 #### Replace missing values with the mean of the interval
-```{r}
+
+```r
 imputed_data <- activity_data %>%
                 group_by(interval) %>%
                 mutate(steps = replace(steps, is.na(steps), mean(steps, na.rm=TRUE))) 
 ```
 #### What is the impact of imputing missing data on the estimates of the total daily number of steps?
-```{r}
+
+```r
 total_steps_imputed <- imputed_data %>%
                        group_by(date) %>% 
                        summarize(total_steps = sum(steps))
@@ -89,8 +95,11 @@ plot4 <- ggplot(data = total_steps_imputed, aes(x = total_steps)) +
 plot_grid(plot1, plot4, labels = c("Removed NAs", "Imputed NAs"), ncol = 1)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+
+```r
 with_day_type <- imputed_data %>%
                  mutate(day.type = ifelse(wday(date) %in% c(1,7), "weekend", "weekday")) %>%
                  group_by(interval, day.type) %>%
@@ -101,3 +110,5 @@ ggplot(data = with_day_type, aes(interval, avg_steps, group = day.type, color = 
   facet_grid(day.type ~ .) +
   theme(legend.position = "none") 
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
